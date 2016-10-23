@@ -1,0 +1,16 @@
+<resources>
+    <string name="app_name">InstantQuery</string>
+    <string name="action_settings">Settings</string>
+    <string name="search_options">filter</string>
+    <string name="hint">New query here</string>
+    <string name="search">Search</string>
+    <string name="fashionstyle">Fashion &amp; Style</string>
+    <string name="sports">Sports</string>
+    <string name="arts">Arts</string>
+    <string name="search_api">c5faed851fad4af3b965b59e187b9fe7</string>
+    <string name="title_activity_article">ArticleActivity</string>
+    <string-array name="sortorder">
+        <item>Newest</item>
+        <item>Oldest</item>
+    </string-array>
+</resources>
