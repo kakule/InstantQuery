@@ -200,8 +200,6 @@ public class SearchActivity extends AppCompatActivity implements
                         offset = Integer.parseInt(response.getJSONObject("response").getJSONObject("meta").getString("offset"));
                         if (offset == 0)
                             articles.clear();
-                        //adapter.clear();
-                        //adapter.addAll(Article.fromJSONArray(articleResults));
                         articles.addAll(Article.fromJSONArray(articleResults));
                         adapter.notifyDataSetChanged();
                         Log.d("DEBUG", "onSuccess");
@@ -213,18 +211,10 @@ public class SearchActivity extends AppCompatActivity implements
 
                 @Override
                 public void onFailure(int statusCode, Header[] headers, Throwable throwable, JSONObject errorResponse) {
-                    super.onFailure(statusCode, headers, throwable, errorResponse);
-                    //super.onFailure(statusCode, headers, responseString, throwable);
-                    Log.d("Failed: ", "" + statusCode);
-                    Log.d("Error : ", "" + throwable);
+                    Log.d("DEBUG","Failed: " + statusCode);
+                    Log.d("DEBUG","Error: " + throwable);
                 }
 
-                @Override
-                public void onFailure(int statusCode, Header[] headers, String responseString, Throwable throwable) {
-                    //super.onFailure(statusCode, headers, responseString, throwable);
-                    Log.d("Failed: ", "" + statusCode);
-                    Log.d("Error : ", "" + throwable);
-                }
             });
         }
     }

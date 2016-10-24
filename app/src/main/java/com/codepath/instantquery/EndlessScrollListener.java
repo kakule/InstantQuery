@@ -4,7 +4,7 @@ import android.util.Log;
 import android.widget.AbsListView;
 
 /**
- * Created by phoen on 10/22/2016.
+ * Created on 10/22/2016.
  */
 public abstract class EndlessScrollListener implements AbsListView.OnScrollListener {
     // The minimum number of items to have below your current scroll position
@@ -66,6 +66,11 @@ public abstract class EndlessScrollListener implements AbsListView.OnScrollListe
             loading = false;
             previousTotalItemCount = totalItemCount;
             currentPage++;
+        } else if (loading && (totalItemCount <= previousTotalItemCount)
+                && (curr - prev >= 3000L)) {
+            //Assume loading failed so set to not loading but don't increment page
+            loading = false;
+
         }
 
         // If it isn't currently loading, we check to see if we have breached

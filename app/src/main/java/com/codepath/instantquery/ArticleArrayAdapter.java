@@ -14,7 +14,7 @@ import com.squareup.picasso.Picasso;
 import java.util.List;
 
 /**
- * Created by phoen on 10/21/2016.
+ * Created on 10/21/2016.
  */
 public class ArticleArrayAdapter extends ArrayAdapter <Article>{
     public ArticleArrayAdapter(Context context, List<Article> articles) {
@@ -45,6 +45,8 @@ public class ArticleArrayAdapter extends ArrayAdapter <Article>{
         if (!TextUtils.isEmpty(thumbnail)) {
             Picasso.with(getContext()).load(thumbnail)
                     .into(imageView);
+        } else {
+            imageView.setImageResource(R.mipmap.ic_no_image);
         }
 
         return convertView;
