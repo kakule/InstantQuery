@@ -11,13 +11,13 @@ import android.view.MenuItem;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 
-import com.codepath.instantquery.Article;
+import com.codepath.instantquery.models.Article;
 import com.codepath.instantquery.R;
 
 import org.parceler.Parcels;
 
 public class ArticleActivity extends AppCompatActivity {
-    static String articleIntentKey = "article";
+    public static String articleIntentKey = "article";
     private ShareActionProvider miShareAction;
 
 

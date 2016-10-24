@@ -1,4 +1,4 @@
-package com.codepath.instantquery;
+package com.codepath.instantquery.models;
 
 import android.util.Log;
 
@@ -8,9 +8,10 @@ import org.json.JSONObject;
 import org.parceler.Parcel;
 
 import java.util.ArrayList;
+import java.util.Random;
 
 /**
- * Created by phoen on 10/21/2016.
+ * Created on 10/21/2016.
  */
 
 @Parcel
@@ -29,7 +30,8 @@ public class Article{
             this.headLine = jsonObject.getJSONObject("headline").getString("main");
             JSONArray multimedia = jsonObject.getJSONArray("multimedia");
             if (multimedia.length() > 0) {
-                JSONObject multimediaJson = multimedia.getJSONObject(0);
+                JSONObject multimediaJson = multimedia.getJSONObject(new Random()
+                        .nextInt(multimedia.length()));
                 this.thumbnail = "http://www.nytimes.com/" + multimediaJson.getString("url");
             } else {
                 this.thumbnail = "";

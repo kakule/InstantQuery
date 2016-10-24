@@ -8,7 +8,7 @@ import android.support.v4.app.DialogFragment;
 import java.util.Calendar;
 
 /**
- * Created by phoen on 10/22/2016.
+ * Created on 10/22/2016.
  */
 public class DateEntryFragment extends DialogFragment {
 
@@ -20,7 +20,6 @@ public class DateEntryFragment extends DialogFragment {
     public static DateEntryFragment newInstance (Calendar initDate) {
         DateEntryFragment dateFrag = new DateEntryFragment();
         Bundle args = new Bundle();
-        //args.putParcelable(FilterSearchDialogFragment.beginDateKey, Parcels.wrap(initDate));
         args.putSerializable(FilterSearchDialogFragment.beginDateKey, initDate);
         dateFrag.setArguments(args);
 

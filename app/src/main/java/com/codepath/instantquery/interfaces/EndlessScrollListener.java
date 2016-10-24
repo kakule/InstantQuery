@@ -1,4 +1,4 @@
-package com.codepath.instantquery;
+package com.codepath.instantquery.interfaces;
 
 import android.util.Log;
 import android.widget.AbsListView;

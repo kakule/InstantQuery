@@ -1,27 +1,27 @@
 package com.codepath.instantquery.activities;
 
 import android.content.Context;
-import android.content.Intent;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.Bundle;
 import android.support.v4.view.MenuItemCompat;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.SearchView;
+import android.support.v7.widget.StaggeredGridLayoutManager;
 import android.support.v7.widget.Toolbar;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.View;
-import android.widget.AdapterView;
-import android.widget.GridView;
 
-import com.codepath.instantquery.Article;
-import com.codepath.instantquery.ArticleArrayAdapter;
-import com.codepath.instantquery.EndlessScrollListener;
 import com.codepath.instantquery.R;
-import com.loopj.android.http.AsyncHttpClient;
+import com.codepath.instantquery.adapters.RecycleArticleAdapter;
+import com.codepath.instantquery.adapters.SpacesItemDecoration;
+import com.codepath.instantquery.interfaces.EndlessRecyclerViewScrollListener;
+import com.codepath.instantquery.models.Article;
+import com.codepath.instantquery.models.ArticleCollection;
+import com.codepath.instantquery.net.ArticleClient;
 import com.loopj.android.http.JsonHttpResponseHandler;
 import com.loopj.android.http.RequestParams;
 
@@ -36,22 +36,25 @@ import java.util.ArrayList;
 import java.util.Calendar;
 
 import cz.msebera.android.httpclient.Header;
+import jp.wasabeef.recyclerview.animators.SlideInUpAnimator;
 
 public class SearchActivity extends AppCompatActivity implements
         FilterSearchDialogFragment.FilterFragListener{
 
+    String currentListKey = "currentlist";
     Calendar beginDate;
     String sortOrder;
     boolean [] newsDesk;
 
-    GridView gvResult;
+    RecyclerView rvResult;
+    StaggeredGridLayoutManager gridLayoutManager;
+    SpacesItemDecoration decoration;
     String lastSearch;
-    AsyncHttpClient client;
+    ArticleClient client;
     int lastPage = 0;
 
-
     ArrayList<Article> articles;
-    ArticleArrayAdapter adapter;
+    RecycleArticleAdapter adapter;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -61,44 +64,45 @@ public class SearchActivity extends AppCompatActivity implements
         // Remove default title text
         getSupportActionBar().setDisplayShowTitleEnabled(false);
 
+        //retrieve past state if present
+        if (savedInstanceState == null ||
+                !savedInstanceState.containsKey(currentListKey)) {
+            articles = new ArrayList<>();
+        } else {
+            ArticleCollection ac = Parcels.unwrap(savedInstanceState.getParcelable(currentListKey));
+            articles = ac.getArticleList();
+        }
+
         setupViews();
     }
 
-    public void setupViews() {
-        //etQuery = (EditText) findViewById(R.id.etQuery);
-        //btnSearch = (Button) findViewById(R.id.btnSearch);
-        gvResult = (GridView) findViewById(R.id.gvResults);
-        articles = new ArrayList<>();
-        client = new AsyncHttpClient();
-        adapter = new ArticleArrayAdapter(this, articles);
-        gvResult.setAdapter(adapter);
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        outState.putParcelable(currentListKey, Parcels.wrap(new ArticleCollection(articles)));
+        super.onSaveInstanceState(outState);
+    }
 
-        //hook up listener for grid click
-        gvResult.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                //create an intent to display item
-                Intent i = new Intent(getApplicationContext(), ArticleActivity.class);
-                //get article to display
-                Article article = articles.get(position);
-                //pass into intent
-                i.putExtra(ArticleActivity.articleIntentKey, Parcels.wrap(article));
-                //launch activity
-                startActivity(i);
-            }
-        });
+    public void setupViews() {
+        rvResult = (RecyclerView) findViewById(R.id.rvResults);
+        client = new ArticleClient();
+        adapter = new RecycleArticleAdapter(this, articles);
+        rvResult.setAdapter(adapter);
+        gridLayoutManager = new StaggeredGridLayoutManager(2, StaggeredGridLayoutManager.VERTICAL);
+        // Set layout manager to position the items
+        rvResult.setLayoutManager(gridLayoutManager);
+        decoration = new SpacesItemDecoration(16);
+        rvResult.addItemDecoration(decoration);
+        rvResult.setItemAnimator(new SlideInUpAnimator());
 
     }
 
     private void setNewScrollListener () {
-        gvResult.setOnScrollListener(new EndlessScrollListener() {
+        rvResult.addOnScrollListener(new EndlessRecyclerViewScrollListener(gridLayoutManager) {
             @Override
-            public boolean onLoadMore(int page, int totalItemsCount) {
+            public void onLoadMore(int page, int totalItemsCount, RecyclerView view) {
                 // Triggered only when new data needs to be appended to the list
-                // Add whatever code is needed to append new items to your AdapterView
+                // Add whatever code is needed to append new items to the bottom of the list
                 customLoadMoreDataFromApi(page);
-                // or customLoadMoreDataFromApi(totalItemsCount);
-                return true; // ONLY if more data is actually being loaded; false otherwise.
             }
         });
     }
@@ -158,65 +162,69 @@ public class SearchActivity extends AppCompatActivity implements
         if (isNetworkAvailable() && isOnline()) {
             lastSearch = query;
             //Toast.makeText(this, "Searching for " + query, Toast.LENGTH_LONG).show();
-            String url = "http://api.nytimes.com/svc/search/v2/articlesearch.json";
-            RequestParams params = new RequestParams();
-            //params.put("api-key", R.string.search_api);
-            params.put("api-key", "8554d21e2a574415aa2dbbd318f251d9");
-            //?q=intel&api-key=c5faed851fad4af3b965b59e187b9fe7"
+            RequestParams params = getParams(page);
             if (page == 0) {
-                client = new AsyncHttpClient();
-                //client.setTimeout(20 * 1000); // Increase default timeout
+                client = new ArticleClient();
             }
-            params.put("page", page);
-            params.put("q", lastSearch);
-            if (beginDate != null)
-                params.put("begin_date", new SimpleDateFormat("yyyyMMdd").format(beginDate.getTime()));
-            if (sortOrder != null)
-                params.put("sort", sortOrder.toLowerCase());
-            if (newsDesk != null) {
-                StringBuilder ndrequest = new StringBuilder("news_desk:(");
-                if (newsDesk[0])
-                    ndrequest.append("\"Arts\"");
-                if (newsDesk[1])
-                    ndrequest.append(" \"Fashion & Style\"");
-                if (newsDesk[2])
-                    ndrequest.append(" \"Sports\"");
-                ndrequest.append(")");
-                params.put("fq", ndrequest.toString());
-            }
-            //params.put("fq", "news_desk:(\"sports\")");
-            Log.d("DEBUG", query + " " + Integer.toString(page));
-            Log.d("DEBUG", "params " + params.toString());
 
-            client.get(url, params, new JsonHttpResponseHandler() {
+            client.getArticles(params, new JsonHttpResponseHandler() {
                 @Override
                 public void onSuccess(int statusCode, Header[] headers, JSONObject response) {
                     Log.d("DEBUG", response.toString());
-                    JSONArray articleResults = null;
-                    int offset = 0;
+                    JSONArray articleResults;
+                    int offset;
                     try {
-                        Log.d("DEBUG", Long.toString(System.currentTimeMillis()));
                         articleResults = response.getJSONObject("response").getJSONArray("docs");
-                        offset = Integer.parseInt(response.getJSONObject("response").getJSONObject("meta").getString("offset"));
+                        offset = Integer.parseInt(response.getJSONObject("response").
+                                getJSONObject("meta").getString("offset"));
                         if (offset == 0)
                             articles.clear();
                         articles.addAll(Article.fromJSONArray(articleResults));
                         adapter.notifyDataSetChanged();
-                        Log.d("DEBUG", "onSuccess");
                     } catch (JSONException e) {
-                        Log.d("DEBUG-h", "hit exception");
                         e.printStackTrace();
                     }
                 }
 
                 @Override
-                public void onFailure(int statusCode, Header[] headers, Throwable throwable, JSONObject errorResponse) {
-                    Log.d("DEBUG","Failed: " + statusCode);
-                    Log.d("DEBUG","Error: " + throwable);
+                public void onFailure(int statusCode, Header[] headers, Throwable throwable,
+                                      JSONObject errorResponse) {
+                    Log.d("DEBUG", "Failed: " + statusCode);
+                    Log.d("DEBUG", "Error: " + throwable);
                 }
 
             });
         }
+    }
+
+    //get the parameters for query
+    private RequestParams getParams (int page) {
+
+        RequestParams params = new RequestParams();
+        params.put("api-key", R.string.search_api);
+        params.put("page", page);
+        params.put("q", lastSearch);
+        if (beginDate != null)
+            params.put("begin_date",
+                    new SimpleDateFormat("yyyyMMdd").format(beginDate.getTime()));
+        if (sortOrder != null)
+            params.put("sort", sortOrder.toLowerCase());
+        if (newsDesk != null) {
+            StringBuilder ndrequest = new StringBuilder("news_desk:(");
+            if (newsDesk[0])
+                ndrequest.append("\"Arts\"");
+            if (newsDesk[1])
+                ndrequest.append(" \"Fashion & Style\"");
+            if (newsDesk[2])
+                ndrequest.append(" \"Sports\"");
+            ndrequest.append(")");
+            params.put("fq", ndrequest.toString());
+        }
+        //params.put("fq", "news_desk:(\"sports\")");
+        Log.d("DEBUG", lastSearch + " " + Integer.toString(page));
+        Log.d("DEBUG", "params " + params.toString());
+
+        return params;
     }
 
     // Append more data into the adapter

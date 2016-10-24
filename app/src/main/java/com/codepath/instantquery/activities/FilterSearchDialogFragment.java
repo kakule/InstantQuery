@@ -21,7 +21,7 @@ import java.text.SimpleDateFormat;
 import java.util.Calendar;
 
 /**
- * Created by phoen on 10/22/2016.
+ * Created on 10/22/2016.
  */
 public class FilterSearchDialogFragment extends DialogFragment{
     static String beginDateKey = "begindate";
@@ -50,7 +50,6 @@ public class FilterSearchDialogFragment extends DialogFragment{
         FilterSearchDialogFragment filterFrag = new FilterSearchDialogFragment();
         Bundle args = new Bundle();
         args.putSerializable(beginDateKey, beginDate);
-        //args.putParcelable(beginDateKey, Parcels.wrap(beginDate));
         args.putString(sortOrderKey, sort);
         args.putBooleanArray(newsDeskKey, news_desk);
 

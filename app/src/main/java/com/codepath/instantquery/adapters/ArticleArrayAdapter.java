@@ -1,4 +1,4 @@
-package com.codepath.instantquery;
+package com.codepath.instantquery.adapters;
 
 import android.content.Context;
 import android.text.TextUtils;
@@ -9,6 +9,8 @@ import android.widget.ArrayAdapter;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.codepath.instantquery.R;
+import com.codepath.instantquery.models.Article;
 import com.squareup.picasso.Picasso;
 
 import java.util.List;
