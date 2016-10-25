@@ -250,8 +250,6 @@ public class SearchActivity extends AppCompatActivity implements
             if (news_desk[i])
                 Log.d("DEBUG", "news_desk " + i + " true");
         }
-        //Log.d("DEBUG", "begindate " + new SimpleDateFormat("MM/dd/yy").format(beginDate.getTime()));
-        //Log.d("DEBUG", "sortorder " + sort);
     }
 
     private Boolean isNetworkAvailable() {

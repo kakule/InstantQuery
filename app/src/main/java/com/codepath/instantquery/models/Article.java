@@ -19,6 +19,7 @@ public class Article{
     String webUrl;
     String headLine;
     String thumbnail;
+    String snippet;
     // empty constructor needed by the Parceler library
     public Article () {
 
@@ -35,6 +36,7 @@ public class Article{
                 this.thumbnail = "http://www.nytimes.com/" + multimediaJson.getString("url");
             } else {
                 this.thumbnail = "";
+                this.snippet = jsonObject.getString("snippet");
             }
         } catch (JSONException e) {
             Log.d("DEBUG", "constructor");
@@ -67,5 +69,9 @@ public class Article{
 
     public String getHeadLine() {
         return headLine;
+    }
+
+    public String getSnippet() {
+        return snippet;
     }
 }

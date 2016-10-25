@@ -17,6 +17,7 @@ import android.widget.Spinner;
 
 import com.codepath.instantquery.R;
 
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 
@@ -29,6 +30,7 @@ public class FilterSearchDialogFragment extends DialogFragment{
     static String newsDeskKey = "news_desk";
     static String fragManFilterKey = "fragment_filter";
 
+    SimpleDateFormat dateFormat = new SimpleDateFormat("MM/dd/yy");
     ImageView ivBeginDate;
     EditText etDate;
     Button btnSave;
@@ -83,7 +85,7 @@ public class FilterSearchDialogFragment extends DialogFragment{
         btnSave.setOnClickListener(onFilterFragClick);
 
         if (beginDate != null) {
-            etDate.setText(new SimpleDateFormat("MM/dd/yy").format(beginDate.getTime()));
+            etDate.setText(dateFormat.format(beginDate.getTime()));
         }
         if (spSelection != null) {
             int position = spAdapter.getPosition(spSelection);
@@ -118,7 +120,6 @@ public class FilterSearchDialogFragment extends DialogFragment{
             beginDate.set(Calendar.YEAR, year);
             beginDate.set(Calendar.MONTH, month);
             beginDate.set(Calendar.DAY_OF_MONTH, dayOfMonth);
-            SimpleDateFormat dateFormat = new SimpleDateFormat("MM/dd/yy");
             etDate.setText(dateFormat.format(beginDate.getTime()));
         }
     };
@@ -127,12 +128,19 @@ public class FilterSearchDialogFragment extends DialogFragment{
         @Override
         public void onClick(View v) {
             boolean [ ] news_desk = new boolean[3];
-
             news_desk[0] = cbArts.isChecked();
             news_desk[1] = cbFS.isChecked();
             news_desk[2] = cbSports.isChecked();
 
             String spSelect = (String) spSort.getSelectedItem();
+
+            //User could have changed time on edit text so read again
+            try {
+                beginDate.setTime(dateFormat.parse(etDate.getText().toString().trim()));
+            } catch (ParseException e) {
+                beginDate = null;
+                e.printStackTrace();
+            }
 
             FilterFragListener filterListener = (FilterFragListener) getActivity();
             filterListener.onSaveFilter(news_desk, beginDate, spSelect);
